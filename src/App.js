@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import * as posenet from '@tensorflow-models/posenet'
-import * as tf from '@tensorflow/tfjs-core';
+// import * as tf from '@tensorflow/tfjs-core';
 import '@tensorflow/tfjs-backend-webgl';
+import Webcam from 'react-webcam';
 
 import logo from './logo.svg';
 import './App.css';
@@ -44,12 +45,21 @@ const handleRunTraining = (event) => {
     });
 } */
 
-const handleRunTraining = (event) => {
-    console.log('Boom :) !');
-}
 
 function App() {
-    const [model, setModel] = useState({});
+    const [posenetModel, setModel] = useState({});
+    const webcamRef = useRef({});
+    const videoConstraints = {
+        width: 800,
+        height: 600,
+        position: "absolute",
+        marginLeft: "auto",
+        marginRight: "auto",
+        left: 0,
+        right: 0,
+        textAlign: "center",
+        zindex: 9
+    };
 
     useEffect(() => {
         loadPosenetModel();
@@ -57,7 +67,7 @@ function App() {
 
     const loadPosenetModel = async () => {
 
-        let loadedModel = await posenet.load({
+        let posenetModel = await posenet.load({
             architecture: 'MobileNetV1',
             outputStride: 16,
             inputResolution: { width: 800, height: 600 },
@@ -65,28 +75,21 @@ function App() {
             quantBytes: 4
         });
 
-        setModel(loadedModel);
+        setModel(posenetModel);
         console.log("Posenet model loaded...");
-        console.log(loadedModel.summary)
+        console.log(posenetModel.summary);
     };
 
     return (
         <div className="App">
             <header className="App-header">
-                <img src={logo} className="App-logo" alt="logo" />
-                <p>
-                    Edit <code>src/App.js</code> and save to reload.
-                </p>
-                <a
-                    className="App-link"
-                    href="https://reactjs.org"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    Still Learning React
-                </a>
-                <br />
-                <button onClick={handleRunTraining}>Run training</button>
+                <Webcam
+                    audio={false}
+                    ref={webcamRef}
+                    screenshotFormat="image/jpeg"
+                    videoConstraints={videoConstraints}
+                />
+
             </header>
         </div>
     );
