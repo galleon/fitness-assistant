@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as posenet from '@tensorflow-models/posenet'
 import * as tf from '@tensorflow/tfjs-core';
 import '@tensorflow/tfjs-backend-webgl';
@@ -44,25 +44,31 @@ const handleRunTraining = (event) => {
     });
 } */
 
-async function loadPosenetModel() {
-    // model_path: 'localstorage://my-model'
-    const model = useState(0)
+const handleRunTraining = (event) => {
+    console.log('Boom :) !');
+}
 
-    useEffect(() =>
-        model = await posenet.load({
+function App() {
+    const [model, setModel] = useState({});
+
+    useEffect(() => {
+        loadPosenetModel();
+    }, []);
+
+    const loadPosenetModel = async () => {
+
+        let loadedModel = await posenet.load({
             architecture: 'MobileNetV1',
             outputStride: 16,
             inputResolution: { width: 800, height: 600 },
             multiplier: 0.75,
             quantBytes: 4
-        })
-    );
+        });
 
-    return model
-}
-
-function App() {
-    model = await loadPosenetModel();
+        setModel(loadedModel);
+        console.log("Posenet model loaded...");
+        console.log(loadedModel.summary)
+    };
 
     return (
         <div className="App">
@@ -77,7 +83,7 @@ function App() {
                     target="_blank"
                     rel="noopener noreferrer"
                 >
-                    Learn React
+                    Still Learning React
                 </a>
                 <br />
                 <button onClick={handleRunTraining}>Run training</button>
