@@ -4,7 +4,7 @@ import * as posenet from '@tensorflow-models/posenet'
 import '@tensorflow/tfjs-backend-webgl';
 import Webcam from 'react-webcam';
 
-import logo from './logo.svg';
+// import logo from './logo.svg';
 import './App.css';
 
 /*
@@ -49,6 +49,13 @@ const handleRunTraining = (event) => {
 function App() {
     const [posenetModel, setModel] = useState({});
     const webcamRef = useRef({});
+    const poseEstimationLoop = useRef(null);
+    const [isPoseEstimation, setIsPoseEstimation] = useState(false)
+
+    useEffect(() => {
+        loadPosenetModel();
+    }, []);
+
     const videoConstraints = {
         width: 800,
         height: 600,
@@ -61,12 +68,8 @@ function App() {
         zindex: 9
     };
 
-    useEffect(() => {
-        loadPosenetModel();
-    }, []);
-
     const loadPosenetModel = async () => {
-
+        // Load the PoseNet model
         let posenetModel = await posenet.load({
             architecture: 'MobileNetV1',
             outputStride: 16,
@@ -80,6 +83,45 @@ function App() {
         console.log(posenetModel.summary);
     };
 
+    const startPoseEstimation = () => {
+        if (webcamRef && webcamRef.current.video.readyState === 4) {
+            // Run pose estimation each 100 milliseconds
+            poseEstimationLoop.current = setInterval(() => {
+                // Get Video Properties
+                const video = webcamRef.current.video;
+                const videoWidth = webcamRef.current.video.videoWidth;
+                const videoHeight = webcamRef.current.video.videoHeight;
+
+                // Set video width
+                webcamRef.current.video.width = videoWidth;
+                webcamRef.current.video.height = videoHeight;
+
+                // Do pose estimation
+                var tic = new Date().getTime()
+                posenetModel.estimateSinglePose(video, {
+                    flipHorizontal: false
+                }).then(pose => {
+                    // What to do here
+                    console.log(tic)
+                    console.log(pose.summary)
+                });
+            }, 100);
+        }
+    };
+
+    const stopPoseEstimation = () => clearInterval(poseEstimationLoop.current);
+
+    const handlePoseEstimation = () => {
+        // Is poseEstimation is running
+        if (isPoseEstimation === true) {
+            stopPoseEstimation();
+            setIsPoseEstimation(false);
+        } else {
+            startPoseEstimation();
+            setIsPoseEstimation(true);
+        }
+    };
+
     return (
         <div className="App">
             <header className="App-header">
@@ -89,6 +131,20 @@ function App() {
                     screenshotFormat="image/jpeg"
                     videoConstraints={videoConstraints}
                 />
+                <button
+                    style={{
+                        position: "relative",
+                        marginLeft: "auto",
+                        marginRight: "auto",
+                        top: 320,
+                        left: 0,
+                        right: 0,
+                        textAlign: "center",
+                        zindex: 9
+                    }}
+                    onClick={handlePoseEstimation}>
+                    {isPoseEstimation ? "Stop" : "Start"}
+                </button>
 
             </header>
         </div>
